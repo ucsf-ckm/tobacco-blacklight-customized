@@ -1,0 +1,47 @@
+<%= form_tag url_for(:controller => "catalog", :action => "email"), :id => 'email_form', :class => "form-horizontal ajax_form", :method => :post do %>
+
+<div class="modal-body">
+<%= render :partial=>'/flash_msg' %>
+<div class="control-group">
+<label class="control-label" for="to">
+<%= t('blacklight.email.form.send_to') %>
+</label>
+<div class="controls">
+<%= text_field_tag :to, params[:to] %><br/>
+</div>
+</div>
+<div class="control-group">
+<label class="control-label" for="message">
+<%= t('blacklight.email.form.message') %>
+</label>
+<div class="controls">
+<%= text_area_tag :message, params[:message] %>
+
+
+<table class="table table-striped search_history">
+	<tr>
+	<td><b>Record</b></td>
+	<td><b>Notes</b></td>
+	</tr>
+	<% @documents.each_with_index do |document, index|%>
+	<tr>
+		<td>
+	   	<%=hidden_field_tag "id[]", document.get(:id)%>
+		<b>Author: </b><%= unknown_if_not_nil(document['aup']) %><br/>
+		<b>Title: </b><%= unknown_if_not_nil(document['ti']) %><br/>
+		<b>Date: </b><%= unknown_if_not_nil(document['ddu']) %><br/>
+		<b>Source: </b><%= unknown_if_not_nil(document['source']) %><br/>
+		<b>URL: </b>http://<%=request.host_with_port%>/catalog/<%=document.id%><br/>
+		<b>Bates: </b><%= unknown_if_not_nil(document['bn']) %><br/>
+		</td>
+		<td>
+		<%= Bookmark.find_by_document_id_and_user_id(document.id, current_or_guest_user.id).nil? ? "" : Bookmark.find_by_document_id_and_user_id(document.id, current_or_guest_user.id).notes %></td>
+	</tr>
+	<%end%>
+</table>
+
+  </div>
+  <div class="modal-footer">
+  <button type="submit" class="btn btn-primary"> <%= t('blacklight.sms.form.submit') %></button>
+  </div>
+<% end %>

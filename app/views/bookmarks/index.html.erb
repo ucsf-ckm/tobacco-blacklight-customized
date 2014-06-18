@@ -1,0 +1,217 @@
+
+
+<% if @document_list.length == 0 %>
+<h2><%=t('blacklight.bookmarks.bookmarks')%></h2>
+<h2><%=t('blacklight.bookmarks.no_bookmarks')%></h2>
+<% else %>
+
+<h2><%=t('blacklight.bookmarks.bookmarks')%></h2>
+
+ <%= link_to 'Citation Format Examples', citation_example_path, :class=>"btn btn-default", :id => "emailLink", :data => {:ajax_modal => "trigger"} %>
+
+
+
+
+<table class="table table-striped search_history">
+	<tr><td><a onclick="javascript:checkAll();" href="javascript:void();">check all</a>/<br/><a onclick="javascript:uncheckAll();" href="javascript:void();">uncheck all</a></td><td>Bookmarked</td><td>Document</td><td></td><td>Notes</td><td> <%= link_to t('blacklight.bookmarks.clear.action_title'), clear_bookmarks_path, :method => :delete, :data => { :confirm => t('blacklight.bookmarks.clear.action_confirm') }, :class => 'clear-bookmarks btn btn-danger pull-right' %></td></tr>
+
+
+<% @document_list.each do |document|%>
+<tr>
+	<td class="query"><%= check_box_tag document.id.to_s %></td>
+
+	<td valign="top"><%= l Bookmark.find_by_document_id_and_user_id(document.id, current_or_guest_user.id).created_at, format: :long %>
+
+		<% if !Bookmark.find_by_document_id_and_user_id(document.id, current_or_guest_user.id).last_action.nil? %>
+			<br/>
+			<b><%= Bookmark.find_by_document_id_and_user_id(document.id, current_or_guest_user.id).last_action%></b> on <%=  l Bookmark.find_by_document_id_and_user_id(document.id, current_or_guest_user.id).last_action_date, format: :long %>
+		
+		<% end %>
+		
+		
+	</td>
+	<td><%= link_to(image_tag("imgpdf.png"))%><br/><%= document['pg'] %> pages</td>
+	<td>
+		<b>Title:</b> <a href=http://<%=request.host_with_port%>/catalog/<%=document.id%>><%= unknown_if_not_nil(document['ti'])%></a><br/>
+		<b>Author:</b> <%= unknown_if_not_nil(document['au']) %><br/>
+		<b>Date:</b> <%= unknown_if_not_nil(document['ddu']) %><br/>
+		<b>Source:</b> <%= unknown_if_not_nil(document['source']) %><br/>
+		<b>[pURL]:</b><a href=http://<%=request.host_with_port%>/catalog/<%=document.id%>> http://<%=request.host_with_port%>/catalog/<%=document.id%></a><br/>
+		<b>Bates Number:</b> <%= unknown_if_not_nil(document['bn']) %></td>
+	<td>   <%= form_tag('/bookmarks') do %>
+
+            <%= text_area_tag 'notes', Bookmark.find_by_document_id_and_user_id(document.id, current_or_guest_user.id).nil? ? "" : Bookmark.find_by_document_id_and_user_id(document.id, current_or_guest_user.id).notes, :size => 80, :onchange => "this.form.submit()", rows: 5, cols: 50 %>
+
+            <%= hidden_field_tag 'id', document.id %>
+            <%= hidden_field_tag 'note', true%>
+        <% end %></td>
+		<td>
+			<% if current_or_guest_user %>
+			  <%- 
+			  # Note these two forms are pretty similar but for different :methods, classes, and labels. 
+			  # but it was simpler to leave them seperate instead of DRYing them, got confusing trying that.
+			  # the data-doc-id attribute is used by our JS that converts to a checkbox/label.
+			  -%>  
+			  <% unless current_or_guest_user.document_is_bookmarked? document.id %>  
+
+			      <%= form_tag( bookmark_path( document ), :method => :put, :class => "bookmark_toggle", "data-doc-id" => document.id, :'data-present' => t('blacklight.search.bookmarks.present'), :'data-absent' => t('blacklight.search.bookmarks.absent'), :'data-inprogress' => t('blacklight.search.bookmarks.inprogress')) do %>   
+			        <%= submit_tag(t('blacklight.bookmarks.add.button'), :id => "bookmark_toggle_#{document.id.to_s.parameterize}", :class => "bookmark_add") %>
+			      <% end %>
+
+			  <% else %>
+
+			      <%= form_tag( bookmark_path( document ), :method => :delete, :class => "bookmark_toggle", "data-doc-id" => document.id, :'data-present' => t('blacklight.search.bookmarks.present'), :'data-absent' => t('blacklight.search.bookmarks.absent'), :'data-inprogress' => t('blacklight.search.bookmarks.inprogress')) do %>  
+			        <%= submit_tag(t('blacklight.bookmarks.remove.button'), :id => "bookmark_toggle_#{document.id.to_s.parameterize}", :class => "bookmark_remove") %>
+			      <% end %>
+
+			  <% end %>
+			<% else %>
+			  &nbsp;
+			<% end %>
+		</td>
+	
+</td>
+<%end%>
+
+</table>
+<%= select_tag "download_format", "<option value='txt'>text</option><option value='csv'>csv</option><option value='xls'>excel</option><option value='endnote'>endnote</option><option value='refworks'>refworks</option>".html_safe %>
+<p/><p/>
+<!--
+        <%= link_to t('blacklight.tools.email'), email_catalog_path(:sort=>params[:sort], :per_page=>params[:per_page], :id => @bookmarks.collect {|doc| doc.document_id}), :class=>"btn btn-default", :id => "emailLink", :data => {:ajax_modal => "trigger"} %>
+	    <%= link_to 'Download', download_bookmarks_path(:sort=>params[:sort], :per_page=>params[:per_page], :id => @bookmarks.collect {|doc| doc.document_id}, :download_format => 'txt'), :class=>"btn btn-default", :id => "emailLink" %>
+        <%= link_to t('blacklight.tools.cite'), citation_catalog_path(:sort=>params[:sort], :per_page=>params[:per_page], :id => @bookmarks.collect{|doc| doc.document_id}), {:id => 'citeLink', :name => 'citation', :class => 'btn btn-default', :data => {:ajax_modal => "trigger"}} %>
+-->
+
+
+
+<%= link_to 'Email', "#", {:id => 'emaillink', :class => 'lightboxLink' } %>
+<%= link_to 'Download', "#", {:id => 'downloadlink', :class => 'btn btn-default' } %>
+<%= link_to 'Citation', "#", {:id => 'citationlink', :class => 'lightboxLink' } %>
+
+<% end %>
+
+<script type="text/javascript", language="javascript">
+
+var emailRecords = function (ev) {
+	query = ""
+	
+	var inputs = document.querySelectorAll("input[type='checkbox']");
+	for(var i = 0; i < inputs.length; i++) {
+		// we check to see if the name is numeric to avoid collecting the add to bookmark checkboxes
+		if (inputs[i].checked == true && isNaN(inputs[i].name)) {
+			query += "id[]="
+		    query += inputs[i].name;
+			query += "&";
+		}
+	}
+		
+	// if nothing was selected, send everything
+	if (query == "") {
+		for(var i = 0; i < inputs.length; i++) {
+			query += "id[]="
+		    query += inputs[i].name;
+			query += "&";
+		}
+	}
+	
+	this.setAttribute('href', '/catalog/email?' + query);
+}
+
+$(document).ready( function () {
+	$('#emaillink').click(emailRecords);	
+});
+
+</script>
+
+<script type="text/javascript", language="javascript">
+var downloadRecords = function downloadRecords() {
+
+	query = ""
+	
+	var inputs = document.querySelectorAll("input[type='checkbox']");
+	for(var i = 0; i < inputs.length; i++) {
+		// we check to see if the name is numeric to avoid collecting the add to bookmark checkboxes
+		if (inputs[i].checked == true && isNaN(inputs[i].name)) {
+			query += "id[]="
+		    query += inputs[i].name;
+			query += "&";
+		}
+	}
+		
+	// if nothing was selected, send everything
+	if (query == "") {
+		for(var i = 0; i < inputs.length; i++) {
+			query += "id[]="
+		    query += inputs[i].name;
+			query += "&";
+		}
+	}
+	
+	query += "&download_format="
+	query += document.getElementById('download_format').value
+	
+	window.location="/bookmarks/download?" + query
+}
+
+$(document).ready( function () {
+	$('#downloadlink').click(downloadRecords);
+});
+
+</script>
+
+<script>
+var citeRecords = function (ev) {
+	query = ""
+	
+	var inputs = document.querySelectorAll("input[type='checkbox']");
+	for(var i = 0; i < inputs.length; i++) {
+		// we check to see if the name is numeric to avoid collecting the add to bookmark checkboxes
+		if (inputs[i].checked == true && isNaN(inputs[i].name)) {
+			query += "id[]="
+		    query += inputs[i].name;
+			query += "&";
+		}
+	}
+		
+	// if nothing was selected, send everything
+	if (query == "") {
+		for(var i = 0; i < inputs.length; i++) {
+			query += "id[]="
+		    query += inputs[i].name;
+			query += "&";
+		}
+	}
+	
+	this.setAttribute('href', '/catalog/citation?' + query);
+}
+
+$(document).ready( function () {
+	$('#citationlink').click(citeRecords);
+});
+
+</script>
+
+<script type="text/javascript" language="javascript">// <![CDATA[
+function checkAll(formname, checktoggle)
+{
+  	var inputs = document.querySelectorAll("input[type='checkbox']");
+	for(var i = 0; i < inputs.length; i++) {
+		if (isNaN(inputs[i].name)) {
+	    	inputs[i].checked = true;   
+		}
+	}
+}
+// ]]></script>
+
+<script type="text/javascript" language="javascript">// <![CDATA[
+function uncheckAll()
+{
+  	var inputs = document.querySelectorAll("input[type='checkbox']");
+	for(var i = 0; i < inputs.length; i++) {
+	   	if (isNaN(inputs[i].name)) {
+	    	inputs[i].checked = false;   
+		}   
+	}
+}
+// ]]></script>
+

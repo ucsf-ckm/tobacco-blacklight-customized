@@ -1,0 +1,6 @@
+<% @documents.each do |document| %>
+	
+	<%= format_citation(document['au'])%> <%= format_citation(document['ti'])%> <%= format_citation(document['dd'])%> <%= format_citation(document['source'])%> <%= format_citation(document['bn'])%> http://<%=request.host_with_port%>/catalog/<%=document.id%> 
+	<p/>
+
+<% end %>

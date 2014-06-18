@@ -1,0 +1,48 @@
+<style>
+  table {table-layout:fixed;}
+  table td {word-wrap:break-word;}
+</style>
+
+<%= form_tag url_for(:controller => "search_history", :action => "email"), :id => 'email_search_form', :class => "form-horizontal ajax_form", :method => :post do %>
+
+<div class="modal-body">
+<%= render :partial=>'/flash_msg' %>
+<div class="control-group">
+<label class="control-label" for="to">
+<%= t('blacklight.email.form.send_to') %>
+</label>
+<div class="controls">
+<%= text_field_tag :to, params[:to] %><br/>
+</div>
+</div>
+<div class="control-group">
+<label class="control-label" for="message">
+<%= t('blacklight.email.form.message') %>
+</label>
+<div class="controls">
+<%= text_area_tag :message, params[:message] %>
+<table class="table table-striped search_history">
+<tr>
+	<td width="50"><b>Search</b></td>
+</tr>
+  <%  @searches.each_with_index do |search,index| -%>
+  <%= content_tag :tr, :id => "document_#{index + 1}" do %>
+    <td>
+	<%= hidden_field_tag "id[" + search.id.to_s + "]", '1' %>
+		<b>Date: </b><%= l search.created_at, format: :long %>
+	    <br/><b>Search Terms: </b><%= search.query_params['q'] %>
+	    <br/><b>Results: </b><%= search.numfound %>
+		<br/><b>Notes: </b><%= search.notes %>
+		<br/><b>URL: </b>http://<%=request.host_with_port%>/catalog?<%=(search.query_params.except(:action, :controller, :only_path, :saved)).to_query%>
+	    <br/><b>Saved: </b><%= !search.user_id.nil? %>
+	</td>
+  <% end #content_tag %>
+<%- end -%>
+</table>
+</div>
+</div>
+</div>
+<div class="modal-footer">
+<button type="submit" class="btn btn-primary"> <%= t('blacklight.sms.form.submit') %></button>
+</div>
+<% end %>

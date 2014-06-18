@@ -1,0 +1,14 @@
+<br/>
+Message: <%= @message %>
+<br/>
+	<% @documents.each do |document|%>
+	   	
+		<br/>Author: </b><%= (document['au']) %>
+		<br/>Title: </b><%= (document['ti']) %>
+		<br/>Date: </b><%= (document['ddu']) %>
+		<br/>Source: </b><%= (document['source']) %>
+		<br/>URL: </b>http://<%=@host%>/catalog/<%=document.id%>
+		<br/>Bates: </b><%= (document['bn']) %>
+		<br/><%= Bookmark.find_by_document_id_and_user_id(document.id, @current_or_guest_user.id).nil? ? "" : Bookmark.find_by_document_id_and_user_id(document.id, @current_or_guest_user.id).notes %>
+		<br/>
+	<%end%>

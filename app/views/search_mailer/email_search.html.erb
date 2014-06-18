@@ -1,0 +1,14 @@
+<h1>Searches</h1>
+<p/>
+Message: <%= @message %>
+<p/>
+
+  <%  @searches.each_with_index do |search,index| -%>
+	<br/>
+    Search Date: <%= l search.created_at, format: :long %><br/>
+    Search Terms: <%= search.query_params['q']%><br/>
+    URL: http://<%=@host%>/catalog?<%=(search.query_params.except(:action, :controller, :only_path, :saved)).to_query%><br/>
+    Results: <%= search.numfound %><br/>
+    Notes: <%= search.notes %><br/>
+    Saved: <%= !search.user_id.nil? %><br/>
+  <%- end -%>

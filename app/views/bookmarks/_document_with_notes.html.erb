@@ -1,0 +1,16 @@
+<% @document_list.each_with_index do |document, document_counter|%>
+    <%= check_box_tag "search_id" %>
+    <% # container for a single doc -%>
+    <div class="document <%= render_document_class document %>" itemscope itemtype="<%= document.itemtype %>">
+        <%= render_document_partials document, blacklight_config.view_config(document_index_view_type).partials, :document_counter => document_counter %>
+
+        <%= form_tag('bookmarks') do %>
+
+            <%= text_field_tag 'notes', Bookmark.find_by_document_id_and_user_id(value, current_or_guest_user.id).nil? ? "" : Bookmark.find_by_document_id_and_user_id(value, current_or_guest_user.id).notes, :size => 80, :onchange => "this.form.submit()" %>
+            <%= hidden_field_tag 'id', document.id %>
+            <%= hidden_field_tag 'note', true%>
+        <% end %>
+    </div>
+<%end%>
+
+

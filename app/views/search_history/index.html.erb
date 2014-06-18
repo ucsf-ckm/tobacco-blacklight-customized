@@ -1,0 +1,180 @@
+<div id="content" class="col-md-12">
+<h1><%=t('blacklight.search_history.title')%></h1>
+
+<%- if @searches.blank? -%>
+  <h2><%=t('blacklight.search_history.no_history')%></h2>
+
+<%- else -%>
+    
+  <h3><%=t('blacklight.search_history.recent')%></h3>
+  <%= render 'search_tools' %>
+
+
+  <table class="table table-striped search_history">
+	<tr><td><a onclick="javascript:checkAll();" href="javascript:void();">check all</a>/<br/><a onclick="javascript:uncheckAll();" href="javascript:void();">uncheck all</a></td><td>Search Date</td><td>Search Terms</td><td>Results</td><td>Notes</td><td><%= link_to t('blacklight.search_history.clear.action_title'), clear_search_history_path, :method => :delete, :data => { :confirm => t('blacklight.search_history.clear.action_confirm') }, :class => 'btn btn-danger pull-right' %></td></tr>
+
+
+    <%  @searches.each_with_index do |search,index| -%>
+    <%= content_tag :tr, :id => "document_#{index + 1}" do %>
+
+  	 <td class="query"><%= check_box_tag search.id.to_s %></td>
+	      <td><%= l search.created_at, format: :long %>
+		<br/>
+		<%if !search.last_action.blank? %>
+			<b><%= search.last_action %></b> on <%= l search.last_action_date, format: :long %>
+		<% end %>
+	 </td>
+      <td class="query"><%= link_to_previous_search(search.query_params) %></td>
+      <%- if has_user_authentication_provider? -%>
+      	<td><%= search.numfound %></td>
+
+	
+		 <%= form_tag(update_search_history_path(search.id)) do %>
+	      	<td><%= text_area_tag 'notes', search.notes, :size => 80, :onchange => "this.form.submit()", rows: 3, cols: 50 %></td>
+
+	        <!--
+			<td class="actions">    
+	            <%= submit_tag "add note", :method => :post, :class => 'btn btn-default'%>
+	        </td>
+			-->
+
+		  <%- end #form tag-%>
+		
+		
+			<!-- not currently allowing users to specifically remove items from history,only saved searches
+	        <td class="actions">    
+	           <%= button_to 'remove', remove_search_path(search.id), :class => 'btn btn-default' %>
+	        </td>
+			-->
+	
+		     <td class="actions">	
+		          <%- if current_or_guest_user && search.saved? -%>
+		            <%= button_to 'remove from favorites', forget_search_path(search.id), :class => 'btn btn-default' %>
+		          <%- else -%>
+					<% if current_user %>
+		            	<%= button_to 'add to favorites', save_search_path(search.id), :method => :post, :class => 'btn btn-default' %>
+					<% else %>
+						<%= button_to 'add to favorites', save_search_path(search.id), :method => :post, :class => 'btn btn-default' %>	            	
+					<% end %>
+		          <%- end -%>
+		        </td>
+      <%- end -%>
+    <% end  %>
+  <%- end -%>
+  </table>
+<p/>
+
+
+<!--
+<p/>
+	<%= link_to t('blacklight.tools.email'), email_search_history_path(:id => @searches), {:id => 'emailLink', :class => 'lightboxLink'} %> 
+
+	<%= link_to 'Download', download_search_history_path(:id => @searches, :download_format => "csv"), {:id => 'emailLink'} %> 
+<p/>
+-->
+
+<%= link_to 'Email', "#", {:id => 'newemaillink', :class => 'lightboxLink'} %>
+<%= link_to 'Download', "#", {:id => 'downloadlink', :class => 'lightboxLink', :class => 'btn btn-default' } %>
+
+<%= select_tag "download_format", "<option value='txt'>text</option><option value='csv'>csv</option><option value='xls'>excel</option>".html_safe %>
+<%- end -%>
+
+
+</div>
+
+
+<!--<a onclick="javascript:emailSearch();" href="javascript:void();">Email</a>-->
+
+
+
+<script type="text/javascript", language="javascript">
+
+var emailSearch = function (ev) {
+	query = ""
+	
+	var inputs = document.querySelectorAll("input[type='checkbox']");
+	for(var i = 0; i < inputs.length; i++) {
+		// we check to see if the name is numeric to avoid collecting the add to bookmark checkboxes
+		if (inputs[i].checked == true) {
+			query += "id[]="
+		    query += inputs[i].name;
+			query += "&";
+		}
+	}
+		
+	// if nothing was selected, send everything
+	if (query == "") {
+		for(var i = 0; i < inputs.length; i++) {
+			query += "id[]="
+		    query += inputs[i].name;
+			query += "&";
+		}
+	}
+	
+	this.setAttribute('href', '/search_history/email?' + query);
+}
+
+$(document).ready( function () {
+	$('#newemaillink').click(emailSearch);
+});
+
+</script>
+
+<script type="text/javascript", language="javascript">
+var downloadSearch = function (ev) {
+
+	query = ""
+	
+	var inputs = document.querySelectorAll("input[type='checkbox']");
+	for(var i = 0; i < inputs.length; i++) {
+		if (inputs[i].checked == true) {
+			query += "id[]="
+		    query += inputs[i].name;
+			query += "&";
+		}
+	}
+		
+	// if nothing was selected, send everything
+	if (query == "") {
+		for(var i = 0; i < inputs.length; i++) {
+			query += "id[]="
+		    query += inputs[i].name;
+			query += "&";
+		}
+	}
+	
+	query += "&download_format="
+	query += document.getElementById('download_format').value
+		
+	window.location="/search_history/download?" + query
+}
+
+$(document).ready( function () {
+	$('#downloadlink').click(downloadSearch);
+});
+
+</script>
+
+
+<script type="text/javascript" language="javascript">// <![CDATA[
+function checkAll()
+{
+  	var inputs = document.querySelectorAll("input[type='checkbox']");
+	for(var i = 0; i < inputs.length; i++) {
+	    inputs[i].checked = true;   
+	}
+}
+// ]]></script>
+
+
+<script type="text/javascript" language="javascript">// <![CDATA[
+function uncheckAll()
+{
+  	var inputs = document.querySelectorAll("input[type='checkbox']");
+	for(var i = 0; i < inputs.length; i++) {
+	    inputs[i].checked = false;   
+	}
+}
+// ]]></script>
+
+
